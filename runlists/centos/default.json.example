@@ -1,0 +1,52 @@
+{
+  "cloud": { "provider": "vagrant", "public_ips": [], "private_ips": [] },
+  "rightscale": { "instance_uuid": "uuid-default" },
+  "sys": {
+    "swap_size": "0.5",
+    "swap_file": "/mnt/ephemeral/swapfile"
+  },
+  "block_device": {
+    "devices": {
+      "device1": {
+        "mount_point": "/mnt/storage",
+        "backup": {
+          "lineage": "lineage"
+        }
+      }
+    }
+  },
+  "system": {
+    "short_hostname": "vg",
+    "domain_name": "cseutils"
+  },
+  "resolver": {
+    "nameservers": ["8.8.8.8","8.8.4.4","4.2.2.3","4.2.2.6"],
+    "search": "foo.bar.baz"
+  },
+  "subversion": {
+    "repo_dir": "/mnt/storage/svn",
+    "repo_name": "chef-bootstrap",
+    "server_name": "foo.bar.baz",
+    "user": "user",
+    "password": "password",
+    "list_parent_path": "on"
+  },
+  "run_list": [
+    "recipe[resolver]",
+    "recipe[rightscaleshim]",
+    "recipe[system::hostname]",
+    "recipe[rightscale::setup_security_updates]",
+    "recipe[logging::default]",
+    "recipe[sys_firewall::default]",
+    "recipe[sys_ntp::default]",
+    "recipe[rightscale::default]",
+    "recipe[rightscale::install_tools]",
+    "recipe[block_device::setup_ephemeral]",
+    "recipe[sys::setup_swap]",
+    "recipe[block_device::default]",
+    "recipe[rightscale::setup_security_update_monitoring]",
+    "recipe[rightscale::do_security_updates]",
+    "recipe[gitolite::default]",
+    "recipe[subversion::server]"
+  ]
+}

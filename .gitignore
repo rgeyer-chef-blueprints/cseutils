@@ -1,0 +1,5 @@
+*.iml
+.idea
+.vagrant
+Berksfile.lock
+rightscaleshim
