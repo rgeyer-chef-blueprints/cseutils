@@ -36,6 +36,7 @@
     "recipe[rightscaleshim]",
     "recipe[system::hostname]",
     "recipe[rightscale::setup_security_updates]",
+    "recipe[rightscale::install_rightimage_extras]",
     "recipe[logging::default]",
     "recipe[sys_firewall::default]",
     "recipe[sys_ntp::default]",
@@ -47,6 +48,7 @@
     "recipe[rightscale::setup_security_update_monitoring]",
     "recipe[rightscale::do_security_updates]",
     "recipe[gitolite::default]",
-    "recipe[subversion::server]"
+    "recipe[subversion::server]",
+    "recipe[rs_user_policy::install]"
   ]
 }
