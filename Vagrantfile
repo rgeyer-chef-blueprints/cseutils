@@ -11,6 +11,12 @@ Vagrant.configure("2") do |config|
 
     default_config.rightscaleshim.run_list_dir = "runlists/centos"
     default_config.rightscaleshim.shim_dir = "rightscaleshim/centos"
+
+    default_config.vm.provision :shell,
+      inline: <<SCRIPT
+  mkdir -p /var/chef/cache
+SCRIPT
+
     default_config.vm.provision :chef_solo do |chef|
       chef.binary_env = "GEM_HOME=/opt/rightscale/sandbox/lib/ruby/gems/1.8"
       chef.binary_path = "/opt/rightscale/sandbox/bin"

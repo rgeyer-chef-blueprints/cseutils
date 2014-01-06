@@ -50,22 +50,25 @@ group :servertemplate do
 
   cookbook "cloudmonitoring",
     git: "git://github.com/rightscale/rackspace_cookbooks.git",
+    branch: "v13.5.0-LTS",
     rel: "cloudmonitoring"
 
   cookbook "driveclient",
     git: "git://github.com/rightscale/rackspace_cookbooks.git",
+    branch: "v13.5.0-LTS",
     rel: "driveclient"
 
   cookbook "gitolite",
     git: "git://github.com/rgeyer-rs-cookbooks/gitolite.git"
 
-  cookbook "subversion",
-    path: "/Users/ryangreyer/Code/Chef/subversion"
-    #git: "git://github.com/opscode-cookbooks/subversion.git"
+  cookbook "subversion"
 
   cookbook "rs_user_policy",
     git: "git://github.com/rgeyer/rs_user_policy.git",
     rel: "cookbooks/rs_user_policy"
+
+  cookbook "cseutils",
+    path: "./cookbooks/cseutils"
 end
 
 group :vagrant_only do
@@ -75,8 +78,7 @@ group :vagrant_only do
     git: "https://github.com/rgeyer-rs-cookbooks/rightscaleshim.git"
 
   cookbook "system",
-    git: "git://github.com/flaccid/cookbooks.git",
-    rel: "cookbooks/system"
+    git: "git://github.com/xhost-cookbooks/system.git"
 
   cookbook "resolver"
 end
