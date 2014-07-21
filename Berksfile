@@ -68,7 +68,7 @@ group :servertemplate do
     rel: "cookbooks/rs_user_policy"
 
   cookbook "cseutils",
-    path: "./cookbooks/cseutils"
+    path: "./cookbook/cseutils"
 end
 
 group :vagrant_only do

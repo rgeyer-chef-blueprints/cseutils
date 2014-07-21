@@ -1,0 +1,32 @@
+name              "cseutils"
+rs_ca_ver         20131202
+short_description "Launch a docker host which runs a few containers that'r useful to the CSE team"
+
+parameter "cloud" do
+  type "string"
+  label "Cloud"
+  allowed_values "GCE", "AWS Oregon"
+  default "GCE"
+end
+
+mapping "cloud_nice_name" do {
+  "GCE" => {
+    "cloud_href" => "/api/clouds/2175",
+    "mci_href" => "/api/multi_cloud_images/377766004",
+    "datacenter_href" => "/api/clouds/2175/datacenters/B3O1DOO8J2P62" # GCE Requires one, where AWS does not
+  },
+  "AWS Oregon" => {
+    "cloud_href" => "/api/clouds/6",
+    "mci_href" => "/api/multi_cloud_images/377767004",
+    "datacenter_href" => null # GCE Requires one, where AWS does not
+  }
+}
+end
+
+resource "cseutils", type: "server" do
+  name "CSEUtils"
+  cloud_href map($cloud_nice_name, $cloud, "cloud_href")
+  server_template find("CSE Utils (Docker)", revision: "HEAD")
+  multi_cloud_image_href map($cloud_nice_name, $cloud, "mci_href")
+  datacenter_href map($cloud_nice_name, $cloud, "datacenter_href")
+end
