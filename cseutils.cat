@@ -9,6 +9,12 @@ parameter "cloud" do
   default "GCE"
 end
 
+parameter "persistent_storage_input" do
+  type "string"
+  label "Persistent Storage Lineage"
+  description "The RightScale volume backup lineage to use for backup and restore.  If left blank a new lineage will be started.  If no existing backups exist for the specified lineage, a blank volume will be created."
+end
+
 mapping "cloud_nice_name" do {
   "GCE" => {
     "cloud_href" => "/api/clouds/2175",
@@ -23,10 +29,30 @@ mapping "cloud_nice_name" do {
 }
 end
 
+output "persistent_storage_output" do
+  label "Persistent Storage"
+  default_value "undefined"
+  description "How the persistent storage was initialized."
+end
+
 resource "cseutils", type: "server" do
   name "CSEUtils"
   cloud_href map($cloud_nice_name, $cloud, "cloud_href")
   server_template find("CSE Utils (Docker)", revision: "HEAD")
   multi_cloud_image_href map($cloud_nice_name, $cloud, "mci_href")
   datacenter_href map($cloud_nice_name, $cloud, "datacenter_href")
+end
+
+operation "enable" do
+  description "Attaches storage, starts services, get's this party started!"
+  definition "enable"
+  output_mappings do {
+    $persistent_storage_output => $lineage
+  } end
+end
+
+define enable(@cseutils) return @cseutils, $lineage do
+  task_label("Enabling CSEUtils")
+
+  $lineage = "Foo"
 end
