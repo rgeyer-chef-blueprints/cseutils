@@ -9,7 +9,7 @@ parameter "cloud" do
   default "GCE"
 end
 
-parameter "persistent_storage_input" do
+parameter "persistent_storage_lineage_input" do
   type "string"
   label "Persistent Storage Lineage"
   description "The RightScale volume backup lineage to use for backup and restore.  If left blank a new lineage will be started.  If no existing backups exist for the specified lineage, a blank volume will be created."
@@ -29,10 +29,16 @@ mapping "cloud_nice_name" do {
 }
 end
 
-output "persistent_storage_output" do
-  label "Persistent Storage"
-  default_value "undefined"
+output "persistent_storage_source_output" do
+  label "Source"
+  category "Persistent Storage"
   description "How the persistent storage was initialized."
+end
+
+output "persistent_storage_lineage_output" do
+  label "Lineage"
+  category "Persistent Storage"
+  description "The active lineage name.  May be what was provided in the input, or a generated value."
 end
 
 resource "cseutils", type: "server" do
@@ -47,12 +53,28 @@ operation "enable" do
   description "Attaches storage, starts services, get's this party started!"
   definition "enable"
   output_mappings do {
-    $persistent_storage_output => $lineage
+    $persistent_storage_source_output => $source,
+    $persistent_storage_lineage_output => $lineage
   } end
 end
 
-define enable(@cseutils) return @cseutils, $lineage do
-  task_label("Enabling CSEUtils")
+define enable(@cseutils,$persistent_storage_lineage_input) task_label: "Enabling CSEUtils", return @cseutils, $source, $lineage do
+  if $persistent_storage_lineage_input == null
+    $lineage = join(["cse-lineage", uuid()])
+    call attach_blank_volume(@cseutils,$lineage) retrieve @volume_attachment
+  elsif
+    $lineage = $persistent_storage_lineage_input
+  end
+end
 
-  $lineage = "Foo"
+define attach_blank_volume(@cseutils,$lineage) task_label: "Attach blank volume to CSEUtils", return @volume_attachment do
+  @volume = @cseutils.current_instance.cloud.volumes.create(
+    volume: {
+      datacenter_href: @cseutils.current_instance.datacenter.href,
+      name: join(["cseutils-data-",$lineage]),
+      size: "10"
+    }
+  )
+
+  @volume_attachment = @cseutils.volume_attachments.create(volume_attachment: {volume_href: @volume.href})
 end
