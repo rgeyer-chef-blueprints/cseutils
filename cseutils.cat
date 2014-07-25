@@ -19,12 +19,15 @@ mapping "cloud_nice_name" do {
   "GCE" => {
     "cloud_href" => "/api/clouds/2175",
     "mci_href" => "/api/multi_cloud_images/377766004",
-    "datacenter_href" => "/api/clouds/2175/datacenters/B3O1DOO8J2P62" # GCE Requires one, where AWS does not
+    "datacenter_href" => "/api/clouds/2175/datacenters/B3O1DOO8J2P62", # GCE Requires one, where AWS does not
+    "volume_device_name" => null
   },
   "AWS Oregon" => {
     "cloud_href" => "/api/clouds/6",
     "mci_href" => "/api/multi_cloud_images/377767004",
-    "datacenter_href" => null # GCE Requires one, where AWS does not
+    "datacenter_href" => "/api/clouds/6/datacenters/D8UCBVAE8MODP",
+    #"datacenter_href" => null, # GCE Requires one, where AWS does not
+    "volume_device_name" => "/dev/xvdb"
   }
 }
 end
@@ -58,23 +61,43 @@ operation "enable" do
   } end
 end
 
-define enable(@cseutils,$persistent_storage_lineage_input) task_label: "Enabling CSEUtils", return @cseutils, $source, $lineage do
-  if $persistent_storage_lineage_input == null
+define enable(@cseutils,$persistent_storage_lineage_input,$cloud,$cloud_nice_name) return @cseutils,$source,$lineage task_label: "Enabling CSEUtils" do
+  $source = "initialized"
+  $lineage = "initialized"
+  if $persistent_storage_lineage_input == ""
+    $source = "Blank Volume"
     $lineage = join(["cse-lineage", uuid()])
-    call attach_blank_volume(@cseutils,$lineage) retrieve @volume_attachment
-  elsif
+    call attach_blank_volume(@cseutils,$lineage,$cloud,$cloud_nice_name) retrieve @volume_attachment
+  else
+    $source = "Snapshot to be named later"
     $lineage = $persistent_storage_lineage_input
+    @current_backup = rs.backups.index(filter: [join(["latest_before==",now()])], lineage: $lineage)
+    if size(@current_backup) >= 1
+      rs.backups.restore(
+        backup: {
+          name: join(["cseutils-data-",$lineage]),
+          size: "10",
+          instance_href: @cseutils.current_instance().href
+        }
+      )
+    else
+      call attach_blank_volume(@cseutils,$lineage,$cloud,$cloud_nice_name) retrieve @volume_attachment
+    end
   end
 end
 
-define attach_blank_volume(@cseutils,$lineage) task_label: "Attach blank volume to CSEUtils", return @volume_attachment do
-  @volume = @cseutils.current_instance.cloud.volumes.create(
+define attach_blank_volume(@cseutils,$lineage,$cloud,$cloud_nice_name) return @volume_attachment task_label: "Attach blank volume to CSEUtils" do
+  $dc_href = $cloud_nice_name[$cloud]['datacenter_href']
+  $device = $cloud_nice_name[$cloud]['volume_device_name'] || $lineage
+  # @extended_instance = @cseutils.current_instance().get(view: "extended")
+  @volume = @cseutils.current_instance().cloud().volumes().create(
     volume: {
-      datacenter_href: @cseutils.current_instance.datacenter.href,
+      #datacenter_href: @extended_instance.datacenter().href,
+      datacenter_href: $dc_href,
       name: join(["cseutils-data-",$lineage]),
       size: "10"
     }
   )
 
-  @volume_attachment = @cseutils.volume_attachments.create(volume_attachment: {volume_href: @volume.href})
+  @volume_attachment = @cseutils.current_instance().volume_attachments().create(volume_attachment: {volume_href: @volume.href, device: $device})
 end
